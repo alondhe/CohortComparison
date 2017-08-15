@@ -1,0 +1,15 @@
+Package: CohortComparison
+Type: Package
+Title: Compares cohorts based on features
+Version: 0.1.0
+Date: 2017-07-18
+Author: Ajit Londhe <alondhe2@its.jnj.com>
+Description: Compares cohorts based on features.
+License: Apache License 2.0
+Depends:
+  DatabaseConnector,
+  googleCharts
+Imports:
+  FeatureExtraction,
+  shiny
+RoxygenNote: 6.0.1

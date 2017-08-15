@@ -1,0 +1,4 @@
+target_id,comparator_id,target_name,comparator_name
+5184,5186,T2DM,T2DM with A1C
+5184,5187,T2DM,T2DM with A1C and numeric
+5184,5188,T2DM,T2DM with A1C and concept
