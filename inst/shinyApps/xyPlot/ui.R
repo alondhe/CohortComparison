@@ -19,20 +19,22 @@ shinyUI(fluidPage(
   ),
   
   
-  headerPanel("Cohort Comparison of Features"),
+  headerPanel("Cohort Comparison of Standard Features"),
   
   mainPanel(
            googleBubbleChart("bubble",
-                             width="800px", height = "475px",
+                             width="1200px", height = "800px",
                              options = list(
                                fontName = "Open Sans",
                                fontSize = 13, 
                                # Set axis labels and ranges
                                hAxis = list(
-                                 title = "Comparator: [OS] Crohns Dx and CRP measurement > 0"
+                                 title = metadata$xTitle,
+                                 logscale = TRUE
                                ), 
                                vAxis = list(
-                                 title = "Target: [OS] Crohns Dx"
+                                 title = metadata$yTitle,
+                                 logscale = TRUE
                                ), 
                                # The default padding is a little too spaced out
                                chartArea = list(

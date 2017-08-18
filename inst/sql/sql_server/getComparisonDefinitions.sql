@@ -1,1 +1,1 @@
-select * from @scratchDatabaseSchema.pbr_epiretreat_cohort_comparisons;
+select * from @scratchDatabaseSchema.@tablePrefix_LAB_cohort_comparisons;

@@ -7,9 +7,15 @@ Author: Ajit Londhe <alondhe2@its.jnj.com>
 Description: Compares cohorts based on features.
 License: Apache License 2.0
 Depends:
-  DatabaseConnector,
-  googleCharts
-Imports:
+  DatabaseConnector (>= 2.0.0),
+  googleCharts,
   FeatureExtraction,
-  shiny
+  shiny,
+  ffbase,
+  ffbase2,
+  ff,
+  stringr,
+  httr,
+  RCurl,
+  jsonlite
 RoxygenNote: 6.0.1

@@ -1,3 +1,6 @@
+output/
+errorReport.txt
+
 # History files
 .Rhistory
 .Rapp.history

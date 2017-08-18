@@ -14,8 +14,6 @@ shinyServer(function(input, output) {
     list(
       data = googleDataTable(data),
       options = list(
-        title = sprintf(
-          "Cohort Comparison"),
         series = series
       )
     )
