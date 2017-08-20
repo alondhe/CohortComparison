@@ -4,7 +4,9 @@ library(googleCharts)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
-  defaultColors <- c("#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477")
+  # defaultColors <- c("#3366cc", "#dc3912", "#ff9900", "#ffff00",
+  #                    "#109618", "#990099", "#0099c6", "#dd4477")
+  defaultColors <- RColorBrewer::brewer.pal(length(levels(data$DOMAIN_ID)), "Spectral")
   series <- structure(
     lapply(defaultColors, function(color) { list(color=color) }),
     names = levels(data$DOMAIN_ID)

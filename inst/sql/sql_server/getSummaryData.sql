@@ -1,5 +1,4 @@
 select 
-  --'CCAE' as DATABASE_NAME,
   A.CONCEPT_ID,
   A.COVARIATE_NAME,
   A.COMPARATOR_STAT_VALUE,
@@ -10,4 +9,3 @@ from @scratchDatabaseSchema.@tablePrefix_LAB_cohort_comparison_summary A
 join @cdmDatabaseSchema.concept B on A.concept_id = B.concept_id
 where target_cohort_definition_id = @targetId and comparator_cohort_definition_id = @comparatorId
 ;
-

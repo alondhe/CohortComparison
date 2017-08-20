@@ -19,7 +19,7 @@ shinyUI(fluidPage(
   ),
   
   
-  headerPanel("Cohort Comparison of Standard Features"),
+  headerPanel(paste0("Cohort Comparison of Standard Features: ", metadata$chartTitle)),
   
   mainPanel(
            googleBubbleChart("bubble",
@@ -30,11 +30,19 @@ shinyUI(fluidPage(
                                # Set axis labels and ranges
                                hAxis = list(
                                  title = metadata$xTitle,
-                                 logscale = TRUE
+                                 titleTextStyle = list(
+                                   fontSize = 20,
+                                   italic = FALSE,
+                                   bold = TRUE
+                                 )
                                ), 
                                vAxis = list(
                                  title = metadata$yTitle,
-                                 logscale = TRUE
+                                 titleTextStyle = list(
+                                   fontSize = 20,
+                                   italic = FALSE,
+                                   bold = TRUE
+                                 )
                                ), 
                                # The default padding is a little too spaced out
                                chartArea = list(

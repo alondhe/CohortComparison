@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{getPlotCovariates}
 \alias{getPlotCovariates}
-\title{Get Plot Covariates}
+\title{(NOT WORKING YET) Get Plot Covariates}
 \usage{
 getPlotCovariates(covariateData)
 }

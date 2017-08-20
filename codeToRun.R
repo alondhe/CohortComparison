@@ -10,7 +10,7 @@ repoConnectionDetails <- DatabaseConnector::createConnectionDetails(dbms = Sys.g
                                                                     port = Sys.getenv("repoServerPort"),
                                                                     user = Sys.getenv("repoUser"),
                                                                     password = Sys.getenv("repoPassword"))
-ohdsiRepositorySchema <- "ohdsi_repository.dbo"
+
 
 
 comparisons <- list(
@@ -20,6 +20,7 @@ comparisons <- list(
 )
 cdmDatabaseSchema <- Sys.getenv("cdmDatabaseSchema")
 scratchDatabaseSchema <- Sys.getenv("scratchDatabaseSchema")
+ohdsiRepositorySchema <- Sys.getenv("ohdsiRepositorySchema")
 tablePrefix <- Sys.getenv("tablePrefix")
 webApiPrefix <- Sys.getenv("webApiPrefix")
 webApiUseSsl <- as.boolean(Sys.getenv("webApiUseSsl"))[1]

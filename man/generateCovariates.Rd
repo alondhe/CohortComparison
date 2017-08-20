@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{generateCovariates}
 \alias{generateCovariates}
-\title{Wrapper for FeatureExtraction to generate covariates of cohort}
+\title{(NOT WORKING YET) Wrapper for FeatureExtraction to generate covariates of cohort}
 \usage{
 generateCovariates(connectionDetails, cdmDatabaseSchema, cdmVersion, cohortId)
 }

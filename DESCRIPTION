@@ -4,8 +4,10 @@ Title: Compares cohorts based on features
 Version: 0.1.0
 Date: 2017-07-18
 Author: Ajit Londhe <alondhe2@its.jnj.com>
-Description: Compares cohorts based on features.
-License: Apache License 2.0
+Maintainer: Ajit Londhe <alondhe2@its.jnj.com>
+Description: Compares cohorts based on features
+License: Apache License, Version 2.0
+LazyData: TRUE
 Depends:
   DatabaseConnector (>= 2.0.0),
   googleCharts,
@@ -18,4 +20,5 @@ Depends:
   httr,
   RCurl,
   jsonlite
+Roxygen: list(wrap = TRUE)
 RoxygenNote: 6.0.1
