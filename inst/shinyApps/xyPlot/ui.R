@@ -21,6 +21,7 @@ shinyUI(fluidPage(
   
   headerPanel(paste0("Cohort Comparison of Standard Features: ", metadata$chartTitle)),
   
+  
   mainPanel(
            googleBubbleChart("bubble",
                              width="1200px", height = "800px",

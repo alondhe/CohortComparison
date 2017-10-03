@@ -6,14 +6,16 @@
 #' @description                   Logically groups targets and comparator Ids
 #' @param targetId                The Id of the target cohort
 #' @param comparatorId            The Id of the comparator cohort
+#' @param comparisonName          The name of the comparison (disease)
 #' @return                        An object containing the targetId and comparatorId
 #'
 #' @export
-buildComparison <- function(targetId, comparatorId)
+buildComparison <- function(targetId, comparatorId, comparisonName)
 {
   comparison <- {}
   comparison$targetId <- targetId
   comparison$comparatorId <- comparatorId
+  comparison$comparisonName <- comparisonName
   return (comparison)
 }
 
@@ -27,7 +29,6 @@ buildComparison <- function(targetId, comparatorId)
 #' @param scratchDatabaseSchema   The fully qualified name of the scratch database schema
 #' @param tablePrefix             The prefix of all scratch tables
 #' @param webApiPrefix            The URL name of the WebAPI instance
-#' @param useHttps                Should SSL be used?
 #' @param cdmVersion              The version of the CDM database
 #' @param comparisons             List of cohort comparisons, each of type \code{buildComparison}
 #'
@@ -39,34 +40,18 @@ generateSqlCovariates <- function(connectionDetails,
                                   scratchDatabaseSchema,
                                   tablePrefix,
                                   webApiPrefix,
-                                  useHttps,
                                   cdmVersion, 
                                   comparisons)
 {
-  # in case WebAPI not available, but otherwise not needed
-  queryCohortDefName <- function(ohdsiRepositorySchema, cohortDefinitionId)
-  {
-    sql <- SqlRender::renderSql("select name from @ohdsiRepositorySchema.cohort_definition 
-                                where id = @cohortDefinitionId",
-                                ohdsiRepositorySchema = ohdsiRepositorySchema,
-                                cohortDefinitionId = cohortDefinitionId)$sql
-    connection <- DatabaseConnector::connect(connectionDetails = repoConnectionDetails)
-    name <- DatabaseConnector::querySql(connection = connection, sql = sql)
-    DatabaseConnector::disconnect(connection = connection)
-    return(str_replace_all(str_replace_all(str_replace_all(
-      name, " ", "_"), 
-      "\\[(.*?)\\]_", ""), "_", " "))
-  }
-  
   cohortDefinitionIds <- unique(c(lapply(comparisons, '[[', 'targetId'), lapply(comparisons, '[[', 'comparatorId')))
   cohortDefinitionSqls <- lapply(X = cohortDefinitionIds, 
     function(cohortDefinitionId)
     {
       sql <- SqlRender::renderSql("select @cohortDefinitionId as cohort_id, '@cohortName' as cohort_name",
                                   cohortDefinitionId = cohortDefinitionId,
-                                  cohortName = getFormattedCohortName(webApiPrefix = webApiPrefix, 
-                                                                      cohortDefinitionId = cohortDefinitionId, 
-                                                                      useHttps = useHttps))$sql
+                                  cohortName = OhdsiRTools::getCohortDefinitionName(baseUrl = webApiPrefix, 
+                                                                      definitionId = cohortDefinitionId, 
+                                                                      formatName = TRUE))$sql
     })
   
   sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "createRef.sql",
@@ -227,12 +212,11 @@ getPlotCovariates <- function(covariateData)
 getMetadata <- function(targetId, comparatorId)
 {
   meta <- {}
-  meta$xTitle <- getFormattedCohortName(webApiPrefix = Sys.getenv("webApiPrefix"), 
-                                        cohortDefinitionId = comparatorId, 
-                                        useHttps = as.boolean(Sys.getenv("webApiUseSsl"))[1])
-  meta$yTitle <- getFormattedCohortName(webApiPrefix = Sys.getenv("webApiPrefix"), 
-                                        cohortDefinitionId = targetId, 
-                                        useHttps = as.boolean(Sys.getenv("webApiUseSsl"))[1])
+  meta$xTitle <- OhdsiRTools::getCohortDefinitionName(baseUrl = Sys.getenv("webApiPrefix"), 
+                                        definitionId = comparatorId, formatName = TRUE)
+  meta$yTitle <- OhdsiRTools::getCohortDefinitionName(baseUrl = Sys.getenv("webApiPrefix"), 
+                                        definitionId = targetId, 
+                                        formatName = TRUE)
   meta$xTitle <- gsub(pattern = "&", replacement = "and", x = meta$xTitle)
   meta$xTitle <- gsub(pattern = ">", replacement = "greater than", x = meta$xTitle)
   

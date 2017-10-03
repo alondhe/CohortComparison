@@ -19,6 +19,9 @@ Depends:
   stringr,
   httr,
   RCurl,
-  jsonlite
+  jsonlite,
+  OhdsiRTools,
+  plotly,
+  webshot
 Roxygen: list(wrap = TRUE)
 RoxygenNote: 6.0.1

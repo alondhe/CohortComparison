@@ -3,7 +3,10 @@ select
   A.COVARIATE_NAME,
   A.COMPARATOR_STAT_VALUE,
   A.TARGET_STAT_VALUE,
-  B.DOMAIN_ID,
+  case 
+    when A.ABS_STANDARD_DIFF < 0.1 then 'Balanced'
+    else B.DOMAIN_ID
+  end as DOMAIN_ID,
   round(A.ABS_STANDARD_DIFF, 3) as ABS_STANDARD_DIFF
 from @scratchDatabaseSchema.@tablePrefix_LAB_cohort_comparison_summary A
 join @cdmDatabaseSchema.concept B on A.concept_id = B.concept_id

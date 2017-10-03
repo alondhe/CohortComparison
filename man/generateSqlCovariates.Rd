@@ -6,7 +6,7 @@
 \usage{
 generateSqlCovariates(connectionDetails, repoConnectionDetails,
   cdmDatabaseSchema, ohdsiRepositorySchema, scratchDatabaseSchema, tablePrefix,
-  webApiPrefix, useHttps, cdmVersion, comparisons)
+  webApiPrefix, cdmVersion, comparisons)
 }
 \arguments{
 \item{connectionDetails}{The connection details of the database, as generated using \code{createConnectionDetails}}
@@ -22,8 +22,6 @@ generateSqlCovariates(connectionDetails, repoConnectionDetails,
 \item{tablePrefix}{The prefix of all scratch tables}
 
 \item{webApiPrefix}{The URL name of the WebAPI instance}
-
-\item{useHttps}{Should SSL be used?}
 
 \item{cdmVersion}{The version of the CDM database}
 

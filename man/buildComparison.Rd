@@ -4,12 +4,14 @@
 \alias{buildComparison}
 \title{Build T vs C comparison object}
 \usage{
-buildComparison(targetId, comparatorId)
+buildComparison(targetId, comparatorId, comparisonName)
 }
 \arguments{
 \item{targetId}{The Id of the target cohort}
 
 \item{comparatorId}{The Id of the comparator cohort}
+
+\item{comparisonName}{The name of the comparison (disease)}
 }
 \value{
 An object containing the targetId and comparatorId
