@@ -1,1 +1,0 @@
-select * from @scratchDatabaseSchema.@tablePrefix_LAB_cohort_comparisons;

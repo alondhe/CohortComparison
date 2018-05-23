@@ -1,8 +1,8 @@
 Package: CohortComparison
 Type: Package
-Title: Compares cohorts based on features
+Title: Compares cohorts based on extracted features
 Version: 0.1.0
-Date: 2017-07-18
+Date: 2018-04-27
 Author: Ajit Londhe <alondhe2@its.jnj.com>
 Maintainer: Ajit Londhe <alondhe2@its.jnj.com>
 Description: Compares cohorts based on features
@@ -10,18 +10,12 @@ License: Apache License, Version 2.0
 LazyData: TRUE
 Depends:
   DatabaseConnector (>= 2.0.0),
-  googleCharts,
-  FeatureExtraction,
-  shiny,
-  ffbase,
-  ffbase2,
-  ff,
-  stringr,
-  httr,
-  RCurl,
+  SqlRender,
   jsonlite,
   OhdsiRTools,
   plotly,
-  webshot
+  webshot,
+  magrittr,
+  httr
 Roxygen: list(wrap = TRUE)
 RoxygenNote: 6.0.1
