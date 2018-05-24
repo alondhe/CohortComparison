@@ -1,11 +1,11 @@
 Package: CohortComparison
 Type: Package
-Title: Compares cohorts based on extracted features
+Title: Produces plotly visual of extracted features generated in Atlas
 Version: 0.1.0
 Date: 2018-04-27
 Author: Ajit Londhe <alondhe2@its.jnj.com>
 Maintainer: Ajit Londhe <alondhe2@its.jnj.com>
-Description: Compares cohorts based on features
+Description: Produces plotly visual of extracted features generated in Atlas
 License: Apache License, Version 2.0
 LazyData: TRUE
 Depends:

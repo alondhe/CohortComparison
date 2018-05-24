@@ -4,7 +4,8 @@
 \alias{plotlyXy}
 \title{Plot the Cohort Comparison chart using Plotly}
 \usage{
-plotlyXy(data, targetId, comparatorId, cdmDbName, title, baseUrl)
+plotlyXy(data, targetId, comparatorId, targetName, comparatorName, cdmDbName,
+  title, baseUrl)
 }
 \arguments{
 \item{data}{A data frame created by \code{getChartData}}
@@ -12,6 +13,10 @@ plotlyXy(data, targetId, comparatorId, cdmDbName, title, baseUrl)
 \item{targetId}{The cohort definition id of the target cohort}
 
 \item{comparatorId}{The cohort definition id of the comparator cohort}
+
+\item{targetName}{The name of the target cohort}
+
+\item{comparatorName}{The name of the comparator cohort}
 
 \item{cdmDbName}{The name of the CDM data source}
 
