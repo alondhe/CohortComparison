@@ -5,19 +5,15 @@
 #'          use in the plotly chart
 #' 
 #' @param connectionDetails          A connectionDetails object created using \code{createConnectionDetails}
-#' @param tablePrefix                The prefix of the scratch tables
 #' @param cdmDatabaseSchema          The fully qualified schema name of the CDM database schema
 #' @param resultsDatabaseSchema      The fully qualified schema name of the results database schema
-#' @param scratchDatabaseSchema      The fully qualified schema name of the scratch database schema
 #' @param cohortDf                   A data frame with COMPARISON_ID, TARGET_ID, COMPARATOR_ID,
 #'                                   and COMPARISON_NAME
 #' 
 #' @export
-getChartData <- function(connectionDetails, 
-                         tablePrefix, 
+getChartData <- function(connectionDetails,
                          cdmDatabaseSchema,
                          resultsDatabaseSchema,
-                         scratchDatabaseSchema,
                          cohortDf) {
   
   comparisons <- apply(X = cohortDf, MARGIN = 1, function(row) {
