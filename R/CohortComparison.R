@@ -5,56 +5,48 @@
 #'          use in the plotly chart
 #' 
 #' @param connectionDetails          A connectionDetails object created using \code{createConnectionDetails}
-#' @param cdmDatabaseSchema          The fully qualified schema name of the CDM database schema
+#' @param vocabDatabaseSchema        The fully qualified schema name of the CDM database schema
 #' @param resultsDatabaseSchema      The fully qualified schema name of the results database schema
-#' @param cohortDf                   A data frame with COMPARISON_ID, TARGET_ID, COMPARATOR_ID,
-#'                                   and COMPARISON_NAME
+#' @param generationId               The ID of the Cohort Characterization generation from Atlas
+#' @param targetCohortId             The ID of the target cohort as defined in Atlas
+#' @param comparatorCohortId         The ID of the comparator cohort as defined in Atlas
+#' @param outputFolder               A folder to store the chart data RDS files
 #' 
 #' @export
 getChartData <- function(connectionDetails,
-                         cdmDatabaseSchema,
+                         vocabDatabaseSchema,
                          resultsDatabaseSchema,
-                         cohortDf) {
-  
-  comparisons <- apply(X = cohortDf, MARGIN = 1, function(row) {
-    sprintf("select %1d as comparison_id, %2d as target_id, %3d as comparator_id",
-            as.integer(row["COMPARISON_ID"]),
-            as.integer(row["TARGET_ID"]),
-            as.integer(row["COMPARATOR_ID"]))
-  })
-  
-  dataTypes <- c("Prevalence") #, "Distributed")
-  
-  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-  dfs <- lapply(dataTypes, function(dataType) {
-    sql <- SqlRender::loadRenderTranslateSql(sqlFilename = sprintf("get%sStats.sql", dataType), 
-                                             packageName = "CohortComparison", 
-                                             dbms = connectionDetails$dbms, 
-                                             comparisons = comparisons,
-                                             cdmDatabaseSchema = cdmDatabaseSchema,
-                                             resultsDatabaseSchema = resultsDatabaseSchema)
-    
-    data <- DatabaseConnector::querySql(connection = connection, sql = sql)
-    data$ABS_STANDARD_DIFF <- 0
-    
-    if (dataType == "Prevalence") {
-      data$ABS_STANDARD_DIFF[(!is.null(data$TARGET_STAT_VALUE) & data$TARGET_STAT_VALUE < 1) |
-                               (!is.null(data$COMPARATOR_STAT_VALUE & data$COMPARATOR_STAT_VALUE < 1))] <- abs((data$TARGET_STAT_VALUE - data$COMPARATOR_STAT_VALUE) / 
-                                      sqrt((data$TARGET_STAT_VALUE*(1-data$TARGET_STAT_VALUE) + 
-                                              data$COMPARATOR_STAT_VALUE*(1-data$COMPARATOR_STAT_VALUE))/2))
-    } else {
-      data$ABS_STANDARD_DIFF[abs(data$TARGET_STDEV_VALUE + data$COMPARATOR_STDEV_VALUE) > 0] <-
-        (data$TARGET_STAT_VALUE - data$COMPARATOR_STAT_VALUE) / sqrt((data$TARGET_STDEV_VALUE + data$COMPARATOR_STDEV_VALUE)/2)
-    }
-    
-    data$DOMAIN_ID[data$ABS_STANDARD_DIFF < 0.1] <- "Balanced"
-    data
-  })
-  
-  DatabaseConnector::disconnect(connection = connection)
-  data <- do.call("rbind", dfs)
+                         generationId,
+                         targetCohortId,
+                         comparatorCohortId,
+                         outputFolder = "output") {
 
-  return (data)
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection = connection))
+
+  sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "getPrevalenceStats.sql", 
+                                           packageName = "CohortComparison", 
+                                           dbms = connectionDetails$dbms, 
+                                           vocabDatabaseSchema = vocabDatabaseSchema,
+                                           resultsDatabaseSchema = resultsDatabaseSchema,
+                                           generationId = generationId,
+                                           targetCohortId = targetCohortId, 
+                                           comparatorCohortId = comparatorCohortId)
+  
+  data <- DatabaseConnector::querySql(connection = connection, sql = sql)
+  data$ABS_STANDARD_DIFF <- 0
+    
+  data$ABS_STANDARD_DIFF[(!is.null(data$TARGET_STAT_VALUE) & data$TARGET_STAT_VALUE < 1) |
+                           (!is.null(data$COMPARATOR_STAT_VALUE & data$COMPARATOR_STAT_VALUE < 1))] <- abs((data$TARGET_STAT_VALUE - data$COMPARATOR_STAT_VALUE) / 
+                                  sqrt((data$TARGET_STAT_VALUE*(1-data$TARGET_STAT_VALUE) + 
+                                          data$COMPARATOR_STAT_VALUE*(1-data$COMPARATOR_STAT_VALUE))/2))
+  
+  data$DOMAIN_ID[data$ABS_STANDARD_DIFF < 0.1] <- "Balanced"
+  rdsFile <- file.path(outputFolder, sprintf("%1d_vs_%2d.rds",
+                                             targetCohortId,
+                                             comparatorCohortId))
+
+  saveRDS(object = data, file = rdsFile)
 }
 
 #' Plot the Cohort Comparison chart using Plotly
@@ -64,7 +56,8 @@ getChartData <- function(connectionDetails,
 #' @param comparatorId    The cohort definition id of the comparator cohort
 #' @param targetName      The name of the target cohort
 #' @param comparatorName  The name of the comparator cohort
-#' @param cdmDbName       The name of the CDM data source
+#' @param outputFolder    The folder to store the charts
+#' @param cdmDbName       The name of the CDM database
 #' @param title           The title of the chart
 #' @param baseUrl         The base URL of the WebAPI instance
 #' 
@@ -74,7 +67,8 @@ plotlyXy <- function(data,
                      comparatorId,
                      targetName,
                      comparatorName,
-                     cdmDbName, 
+                     outputFolder, 
+                     cdmDbName,
                      title,
                      baseUrl) {
   
@@ -91,7 +85,7 @@ plotlyXy <- function(data,
            "#ffbcec", "#f442dc", "#ff0000", "#011d49")
   pal <- setNames(pal, domains)
   
-  p <- plotly::plot_ly(data = data, x = ~COMPARATOR_STAT_VALUE, y = ~TARGET_STAT_VALUE, 
+  p <- plotly::plot_ly(data = data, x = ~COMPARATOR_STAT_VALUE, y = ~TARGET_STAT_VALUE, text = ~COVARIATE_NAME,
                        color = ~DOMAIN_ID, colors = pal, type = "scatter", 
                        mode = "markers", marker = list(size =10, 
                                                        line = list(color = "#000000", width = 1))) %>%
@@ -108,44 +102,53 @@ plotlyXy <- function(data,
                                 tickfont = list(size = 20),
                                 title = targetName))
   
-  filePath <- file.path("output", "charts", cdmDbName)
-  if (!dir.exists(filePath)) {
-    dir.create(path = filePath, recursive = TRUE)
+  chartPath <- file.path(outputFolder, cdmDbName)
+  if (!dir.exists(chartPath)) {
+    dir.create(path = chartPath, recursive = TRUE)
   }
-  plotly::export(p, file = file.path(filePath, sprintf("%1d vs %2d.png", targetId, comparatorId)))
+  plotly::export(p, file = file.path(chartPath, sprintf("%1d vs %2d.png", targetId, comparatorId)))
+  
+  p
 }
 
 
-#' Import Features From WebAPI
-#' 
-#' @param baseUrl      The URL of the WebAPI endpoint
-#' @param cohortId     The cohort definition id in Atlas
-#' @param sourceKey    The source key for the CDM as defined in Atlas
-#' 
-#' @return             A list of data frames (one for distributed features, one for prevalence features),
-#'                     with name and df as attributes
-#' 
-#' @export
-#' 
-importFeaturesFromWebApi <- function(baseUrl, 
-                                     cohortId,
-                                     sourceKey) {
-  distributionUrl <- sprintf("%1s/featureextraction/query/distributions/%1d/%2s",
-                             baseUrl,
-                             cohortId,
-                             sourceKey)
+.getMoreStats <- function(data) {
+  totalComparisons <- nrow(data)
+  totalBalanced <- nrow(subset(data, DOMAIN_ID == 'Balanced'))
+  nCondition <- nrow(subset(data,DOMAIN == 'Condition'))
+  nDrug <- nrow(subset(data,DOMAIN == 'Drug'))
+  nDevice <- nrow(subset(data,DOMAIN == 'Device'))
+  nMeasurement <- nrow(subset(data,DOMAIN == 'Measurement'))
+  nMetadata <- nrow(subset(data,DOMAIN == 'Metadata'))
+  nObservation <- nrow(subset(data,DOMAIN == 'Observation'))
+  nProcedure <- nrow(subset(data,DOMAIN == 'Procedure'))
+  nRace <- nrow(subset(data,DOMAIN == 'Race'))
+  nEthnicity <- nrow(subset(data,DOMAIN == 'Ethnicity'))
+  nGender <- nrow(subset(data,DOMAIN == 'Gender'))
+  nMeasValue <- nrow(subset(data, DOMAIN =='Meas Value'))
+  nTypeConcept <- nrow(subset(data, DOMAIN =='Type Concept'))
   
-  prevalenceUrl <- sprintf("%1s/featureextraction/query/prevalence/%1d/%2s",
-                           baseUrl,
-                           cohortId,
-                           sourceKey)
+  nOOBCondition <- nrow(subset(data,DOMAIN == 'Condition' & ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBDrug <- nrow(subset(data,DOMAIN == 'Drug' & ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBDevice <- nrow(subset(data,DOMAIN == 'Device'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBMeasurement <- nrow(subset(data,DOMAIN == 'Measurement'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBMetadata <- nrow(subset(data,DOMAIN == 'Metadata'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBObservation <- nrow(subset(data,DOMAIN == 'Observation'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBProcedure <- nrow(subset(data,DOMAIN == 'Procedure'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBRace <- nrow(subset(data,DOMAIN == 'Race'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBEthnicity <- nrow(subset(data,DOMAIN == 'Ethnicity'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBGender <- nrow(subset(data,DOMAIN == 'Gender'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBMeasValue <- nrow(subset(data, DOMAIN =='Meas Value'& ABS_STANDARD_DIFF > abs(0.1)))
+  nOOBTypeConcept <- nrow(subset(data, DOMAIN =='Type Concept'& ABS_STANDARD_DIFF > abs(0.1)))
   
-  dfs <- lapply(c("distribution", "prevalence"), function (type) {
-    url <- get(sprintf("%sUrl", type))
-    json <- httr::GET(url)
-    json <- httr::content(json)
-    list(name = type, df = do.call(rbind, lapply(json, data.frame)))
-  })
+  nOOB <- nOOBCondition + nOOBDrug + nOOBDevice + nOOBMeasurement + nOOBMetadata + nOOBObservation + nOOBProcedure + nOOBRace + nOOBEthnicity + nOOBGender + 
+    nOOBMeasValue + nOOBTypeConcept
   
-  return (dfs)
+  
+  covarCnts <- data.frame(comparison = comparison$COMPARISON_NAME, target_id = comparison$TARGET_ID, comparator_id = comparison$COMPARATOR_ID, 
+                          totalComparisons = totalComparisons, totalBalanced = totalBalanced, nCondition = nCondition, nDrug = nDrug, nDevice=nDevice, nMeasurement = nMeasurement, 
+                          nMetadata = nMetadata, nObservation = nObservation, nProcedure=nProcedure, nRace=nRace, nEthnicity = nEthnicity, nGender = nGender,
+                          nMeasValue = nMeasValue, nTypeConcept = nTypeConcept, nOOB = nOOB, nOOBCondition = nOOBCondition, nOOBDevice = nOOBDevice, 
+                          nOOBDrug = nOOBDrug, nOOBEthnicity = nOOBEthnicity, nOOBGender = nOOBGender, nOOBMeasurement = nOOBMeasurement, 
+                          nOOBMetadata = nOOBMetadata, nOOBObservation = nOOBObservation, nOOBProcedure = nOOBProcedure, nOOBRace = nOOBRace)
 }

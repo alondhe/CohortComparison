@@ -4,22 +4,24 @@
 \alias{getChartData}
 \title{Get Chart Data}
 \usage{
-getChartData(connectionDetails, tablePrefix, cdmDatabaseSchema,
-  resultsDatabaseSchema, scratchDatabaseSchema, cohortDf)
+getChartData(connectionDetails, vocabDatabaseSchema, resultsDatabaseSchema,
+  generationId, targetCohortId, comparatorCohortId,
+  outputFolder = "output")
 }
 \arguments{
 \item{connectionDetails}{A connectionDetails object created using \code{createConnectionDetails}}
 
-\item{tablePrefix}{The prefix of the scratch tables}
-
-\item{cdmDatabaseSchema}{The fully qualified schema name of the CDM database schema}
+\item{vocabDatabaseSchema}{The fully qualified schema name of the CDM database schema}
 
 \item{resultsDatabaseSchema}{The fully qualified schema name of the results database schema}
 
-\item{scratchDatabaseSchema}{The fully qualified schema name of the scratch database schema}
+\item{generationId}{The ID of the Cohort Characterization generation from Atlas}
 
-\item{cohortDf}{A data frame with COMPARISON_ID, TARGET_ID, COMPARATOR_ID,
-and COMPARISON_NAME}
+\item{targetCohortId}{The ID of the target cohort as defined in Atlas}
+
+\item{comparatorCohortId}{The ID of the comparator cohort as defined in Atlas}
+
+\item{outputFolder}{A folder to store the chart data RDS files}
 }
 \description{
 Get Chart Data
