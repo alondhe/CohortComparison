@@ -111,44 +111,37 @@ plotlyXy <- function(data,
   p
 }
 
-
-.getMoreStats <- function(data) {
-  totalComparisons <- nrow(data)
-  totalBalanced <- nrow(subset(data, DOMAIN_ID == 'Balanced'))
-  nCondition <- nrow(subset(data,DOMAIN == 'Condition'))
-  nDrug <- nrow(subset(data,DOMAIN == 'Drug'))
-  nDevice <- nrow(subset(data,DOMAIN == 'Device'))
-  nMeasurement <- nrow(subset(data,DOMAIN == 'Measurement'))
-  nMetadata <- nrow(subset(data,DOMAIN == 'Metadata'))
-  nObservation <- nrow(subset(data,DOMAIN == 'Observation'))
-  nProcedure <- nrow(subset(data,DOMAIN == 'Procedure'))
-  nRace <- nrow(subset(data,DOMAIN == 'Race'))
-  nEthnicity <- nrow(subset(data,DOMAIN == 'Ethnicity'))
-  nGender <- nrow(subset(data,DOMAIN == 'Gender'))
-  nMeasValue <- nrow(subset(data, DOMAIN =='Meas Value'))
-  nTypeConcept <- nrow(subset(data, DOMAIN =='Type Concept'))
+#' Creates a data frame summarizing the cohort comparison
+#' 
+#' @param dataFolder        The path to the folder containing data files produced by \code{\link{getChartData}}
+#' @param comparisonsPath   The path to the CSV file with the comparisons
+#' @param baseUrl           The base URL of the WebAPI instance
+#' 
+#' @export
+getSummaryTable <- function(dataFolder,
+                            comparisonsPath,
+                            baseUrl) {
   
-  nOOBCondition <- nrow(subset(data,DOMAIN == 'Condition' & ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBDrug <- nrow(subset(data,DOMAIN == 'Drug' & ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBDevice <- nrow(subset(data,DOMAIN == 'Device'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBMeasurement <- nrow(subset(data,DOMAIN == 'Measurement'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBMetadata <- nrow(subset(data,DOMAIN == 'Metadata'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBObservation <- nrow(subset(data,DOMAIN == 'Observation'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBProcedure <- nrow(subset(data,DOMAIN == 'Procedure'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBRace <- nrow(subset(data,DOMAIN == 'Race'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBEthnicity <- nrow(subset(data,DOMAIN == 'Ethnicity'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBGender <- nrow(subset(data,DOMAIN == 'Gender'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBMeasValue <- nrow(subset(data, DOMAIN =='Meas Value'& ABS_STANDARD_DIFF > abs(0.1)))
-  nOOBTypeConcept <- nrow(subset(data, DOMAIN =='Type Concept'& ABS_STANDARD_DIFF > abs(0.1)))
+  comparisons <- read.csv(file = comparisonsPath, header = TRUE, as.is = TRUE, stringsAsFactors = FALSE)
+  tables <- apply(comparisons, 1, function(t) {
+    
+    df <- readRDS(file.path(dataFolder, sprintf("%s_vs_%s.rds", t["TARGET_ID"][[1]], t["COMPARATOR_ID"][[1]])))
+    
+    numCovariates <- nrow(df)
+    numUnbalancedCovs <- nrow(df[df$ABS_STANDARD_DIFF > 0.1,])
+    perUnbalancedCovariates <- 100.00 * (numUnbalancedCovs / numCovariates)
+    
+    data.frame(
+      outcome = t["OUTCOME_NAME"][[1]],
+      targetCohort = OhdsiRTools::getCohortDefinitionName(baseUrl = baseUrl, definitionId = as.integer(t["TARGET_ID"][[1]]), formatName = TRUE),
+      comparatorCohort = OhdsiRTools::getCohortDefinitionName(baseUrl = baseUrl, definitionId = as.integer(t["COMPARATOR_ID"][[1]]), formatName = TRUE),
+      numCovariates = numCovariates,
+      numUnbalancedCovs = numUnbalancedCovs,
+      perUnbalancedCovariates = perUnbalancedCovariates
+    )
+  })
   
-  nOOB <- nOOBCondition + nOOBDrug + nOOBDevice + nOOBMeasurement + nOOBMetadata + nOOBObservation + nOOBProcedure + nOOBRace + nOOBEthnicity + nOOBGender + 
-    nOOBMeasValue + nOOBTypeConcept
-  
-  
-  covarCnts <- data.frame(comparison = comparison$COMPARISON_NAME, target_id = comparison$TARGET_ID, comparator_id = comparison$COMPARATOR_ID, 
-                          totalComparisons = totalComparisons, totalBalanced = totalBalanced, nCondition = nCondition, nDrug = nDrug, nDevice=nDevice, nMeasurement = nMeasurement, 
-                          nMetadata = nMetadata, nObservation = nObservation, nProcedure=nProcedure, nRace=nRace, nEthnicity = nEthnicity, nGender = nGender,
-                          nMeasValue = nMeasValue, nTypeConcept = nTypeConcept, nOOB = nOOB, nOOBCondition = nOOBCondition, nOOBDevice = nOOBDevice, 
-                          nOOBDrug = nOOBDrug, nOOBEthnicity = nOOBEthnicity, nOOBGender = nOOBGender, nOOBMeasurement = nOOBMeasurement, 
-                          nOOBMetadata = nOOBMetadata, nOOBObservation = nOOBObservation, nOOBProcedure = nOOBProcedure, nOOBRace = nOOBRace)
+  do.call(rbind, tables)
 }
+
+
